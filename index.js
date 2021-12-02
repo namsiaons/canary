@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const port = 3000
 const path = require('path');
+const handlebars = require('express-handlebars');
 app.use(express.static('public'));
 var mysql = require('mysql');
 
@@ -9,42 +10,62 @@ var con = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
-  database: "canary",
+  database: "canaryb",
 });
 
-con.connect(function(err) {
+con.connect(function (err) {
   if (err) throw err;
   console.log("Connected!");
 
 });
 
+
+const hbs = handlebars.create({
+  layoutsDir: __dirname + '/views/layouts',
+  extname: 'hbs'
+});
+
+
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+
+
+
+app.use(express.static('public'))
+
 app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, '/views/index.html'));
+  res.render('index'), {
+    layout: "index"
+  }
 });
 
 
 app.get('/signin', (req, res) => {
-   
-    res.sendFile(path.join(__dirname, '/views/signin.html'));
-})
+  res.render('signin'), {
+    layout: "signin"
+  }
+
+});
 
 app.get('/signup', (req, res) => {
-   
-    res.sendFile(path.join(__dirname, '/views/signup.html'));
-})
+  res.render('signup'), {
+    layout: "signup"
+  }
+
+});
 app.get('/profile/:username', (req, res) => {
-   
-   
-    res.sendFile(path.join(__dirname, '/views/profile.html'));
-   
-    console.log(req.params.username);
-    con.query("SELECT * FROM user_name where username=?",req.params.username, function (err, result, fields) {
-        if (err) throw err;
-        console.log(result);
-      });
+
+  console.log(req.params.username);
+  con.query("SELECT * FROM user where user_name=?", req.params.username, function (err, result, fields) {
+    if (err) throw err;
+    console.log(result);
+
+    res.render('profile', {
+      layout: 'index',
+      userinfo: result
+    });
+
+  });
 })
 
-
-app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
-})
+app.listen(3000);
